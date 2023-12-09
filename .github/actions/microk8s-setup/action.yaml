@@ -55,7 +55,6 @@ runs:
     - name: Enable and disable expected microk8s add-ons, set dns and restart
       shell: bash
       run: |
-        #sudo microk8s enable ingress storage rbac
         sudo microk8s disable rbac dns
         sudo microk8s enable dns:$(grep -oPm1 'Current DNS Server: \K[^\s]+' <<< "$(resolvectl status)")
         sudo snap stop microk8s
