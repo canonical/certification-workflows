@@ -57,4 +57,4 @@ runs:
       run: |
         #sudo microk8s enable ingress storage rbac
         sudo microk8s disable rbac dns
-        sudo microk8s enable dns:$(grep -oPm1 'Current DNS Server: \K[^\s]+'
+        sudo microk8s enable dns:$(grep -oPm1 'Current DNS Server: \K[^\s]+')
