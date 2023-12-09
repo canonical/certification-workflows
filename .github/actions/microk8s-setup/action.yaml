@@ -25,7 +25,7 @@ runs:
       with:
         channel: 5.19/stable
     - name: Setup operator environment
-      uses: mz2/actions-operator@4fcb55b99e2a0f69a5910870d3639d203aeb87aa
+      uses: charmed-kubernetes/actions-operator@main
       with:
         channel: 1.28-strict/stable
         provider: microk8s
