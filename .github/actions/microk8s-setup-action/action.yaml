@@ -4,7 +4,6 @@ inputs:
   enable_containerd_template_adjustment:
     description: 'Whether to adjust containerd template for GHCR.io credentials'
     required: false
-    default: 'false'
   ghcr_package_api_user:
     description: 'GitHub Container Registry API User'
     required: false
@@ -35,7 +34,7 @@ runs:
         lxd-channel: 5.19/stable
     - name: Adjust containerd template to add ghcr.io credentials
       shell: bash
-      if: ${{ inputs.add_ghcr_creds_to_containerd_template }}
+      if: ${{ inputs.add_ghcr_creds_to_containerd_template == 'true' }}
       run: |
         sudo mkdir -p /var/snap/microk8s/current/args
         echo "" | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
