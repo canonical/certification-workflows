@@ -1,0 +1,63 @@
+name: 'Setup Environment'
+description: 'Sets up Docker, LXD, and other dependencies'
+inputs:
+  enable_containerd_template_adjustment:
+    description: 'Whether to adjust containerd template for GHCR.io credentials'
+    required: false
+    default: 'false'
+  ghcr_package_api_user:
+    description: 'GitHub Container Registry API User'
+    required: false
+  ghcr_package_api_token:
+    description: 'GitHub Container Registry API Token'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Set up docker buildx with docker.io image registry mirror caching
+      uses: docker/setup-buildx-action@v3
+      with:
+        config-inline: |
+          [registry."docker.io"]
+            mirrors = ["https://github-runner-dockerhub-cache.canonical.com:5000"]
+    - name: Setup LXD
+      uses: canonical/setup-lxd@main
+      with:
+        channel: 5.19/stable
+    - name: Setup operator environment
+      uses: mz2/actions-operator@4fcb55b99e2a0f69a5910870d3639d203aeb87aa
+      with:
+        channel: 1.28-strict/stable
+        provider: microk8s
+        juju-channel: 3.2/stable
+        charmcraft-channel: 2.x/stable
+        lxd-channel: 5.19/stable
+    - name: Adjust containerd template to add ghcr.io credentials
+      shell: bash
+      if: ${{ inputs.add_ghcr_creds_to_containerd_template }}
+      run: |
+        sudo mkdir -p /var/snap/microk8s/current/args
+        echo "" | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+        echo '[plugins."io.containerd.grpc.v1.cri".registry.configs."ghcr.io".auth]' | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+        echo '  username = "$GHCR_PACKAGE_API_USER"' | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+        echo '  password = "$GHCR_PACKAGE_API_TOKEN"' | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
+        sudo systemctl restart snap.microk8s.daemon-containerd.service
+      env:
+        GHCR_PACKAGE_API_USER: ${{ secrets.GHCR_PACKAGE_API_USER }}
+        GHCR_PACKAGE_API_TOKEN: ${{ secrets.GHCR_PACKAGE_API_TOKEN }}
+    - name: Set up mirror for docker.io image registry
+      shell: bash
+      run: |
+        sudo mkdir -p /var/snap/microk8s/current/args/certs.d/docker.io
+        echo 'server = "https://github-runner-dockerhub-cache.canonical.com:5000"' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo '[host."https://github-runner-dockerhub-cache.canonical.com:5000"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+        echo 'capabilities = ["pull", "resolve"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
+    - name: Enable and disable expected microk8s add-ons, set dns and restart
+      shell: bash
+      run: |
+        #sudo microk8s enable ingress storage rbac
+        sudo microk8s disable rbac dns
+        sudo microk8s enable dns:$(grep -oPm1 'Current DNS Server: \K[^\s]+'
