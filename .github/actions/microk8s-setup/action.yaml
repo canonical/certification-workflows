@@ -52,11 +52,4 @@ runs:
         echo 'server = "https://github-runner-dockerhub-cache.canonical.com:5000"' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo '[host."https://github-runner-dockerhub-cache.canonical.com:5000"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-    - name: Enable and disable expected microk8s add-ons, set dns and restart
-      shell: bash
-      run: |
-        sudo microk8s disable rbac dns
-        sudo microk8s enable dns:$(grep -oPm1 'Current DNS Server: \K[^\s]+' <<< "$(resolvectl status)")
-        sudo snap stop microk8s
-        sudo snap start microk8s
         
