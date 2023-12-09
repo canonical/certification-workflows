@@ -1,5 +1,5 @@
-name: 'Setup Environment'
-description: 'Sets up Docker, LXD, and other dependencies'
+name: microk8s-setup
+description: Sets up a ready-to-be-tested microk8s single-node cluster
 inputs:
   enable_containerd_template_adjustment:
     description: 'Whether to adjust containerd template for GHCR.io credentials'

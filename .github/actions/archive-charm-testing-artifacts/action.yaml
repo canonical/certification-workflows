@@ -1,0 +1,33 @@
+name: archive-charm-testing-artifacts
+description: Sets up a ready-to-be-tested microk8s single-node cluster
+inputs:
+  enable_containerd_template_adjustment:
+    description: 'Whether to adjust containerd template for GHCR.io credentials'
+    required: false
+  ghcr_package_api_user:
+    description: 'GitHub Container Registry API User'
+    required: false
+  ghcr_package_api_token:
+    description: 'GitHub Container Registry API Token'
+    required: false
+    
+runs:
+  using: 'composite'
+  steps:
+  - name: Archive the tested charm
+    uses: actions/upload-artifact@v3
+    with:
+      name: tested-charm
+      path: .tox/**/*.charm
+      retention-days: 5
+  - name: Archive logs on failure
+    uses: actions/upload-artifact@v3
+    with:
+      name: charmcraft-logs
+      path: ./frontend/charm/**/*.log
+  - name: Archive juju crashdump on failure
+    if: failure()
+    uses: actions/upload-artifact@v3
+    with:
+      name: juju-crashdump
+      path: ./frontend/charm/juju-crashdump-*.tar.xz
