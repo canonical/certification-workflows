@@ -1,6 +1,6 @@
 # certification-github-workflows
 
-This repository is the home to reusable GitHub workflows and
+This repository is the home to reusable GitHub [workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows) and
 [composite actions](https://docs.github.com/en/actions/creating-actions/creating-a-composite-action)
 useful across the different pieces of the Certification ops stack.
 
