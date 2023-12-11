@@ -7,7 +7,7 @@ runs:
   - name: Archive the tested charm
     uses: actions/upload-artifact@v3
     with:
-      name: tested-charm
+      name: tested-charm-${{github.run_id}}
       path: .tox/**/*.charm
       retention-days: 5
   - name: Archive logs on failure
