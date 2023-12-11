@@ -1,15 +1,5 @@
 name: archive-charm-testing-artifacts
 description: Archives the charm(s) that were built during a job, along with possible log and juju crashdump outputs
-inputs:
-  enable_containerd_template_adjustment:
-    description: 'Whether to adjust containerd template for GHCR.io credentials'
-    required: false
-  ghcr_package_api_user:
-    description: 'GitHub Container Registry API User'
-    required: false
-  ghcr_package_api_token:
-    description: 'GitHub Container Registry API Token'
-    required: false
     
 runs:
   using: 'composite'
