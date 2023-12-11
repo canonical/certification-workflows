@@ -48,3 +48,9 @@ jobs:
       run:
         working-directory: ./frontend/charm
 ```
+
+In case of a success, job artifacts include the charm that was built, as well as
+charmcraft and juju logs.
+
+In case of a failure, you will find in addition also output from
+[juju-crashdump](https://github.com/juju/juju-crashdump).
