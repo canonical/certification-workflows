@@ -14,10 +14,10 @@ runs:
     uses: actions/upload-artifact@v3
     with:
       name: charmcraft-logs
-      path: ./frontend/charm/**/*.log
+      path: ./**/*.log
   - name: Archive juju crashdump on failure
     if: failure()
     uses: actions/upload-artifact@v3
     with:
       name: juju-crashdump
-      path: ./frontend/charm/juju-crashdump-*.tar.xz
+      path: ./**/juju-crashdump-*.tar.xz
