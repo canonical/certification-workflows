@@ -1,14 +1,16 @@
 name: microk8s-setup
-description: Sets up a ready-to-be-tested microk8s single-node cluster
+description: |
+  Sets up a ready-to-be-tested microk8s single-node cluster.
+  When both `ghcr_package_api_user` and `ghcr_package_api_token` are provided,
+  the action will also configure the cluster to be able to pull images from a private ghcr.io registry.
 inputs:
-  enable_containerd_template_adjustment:
-    description: 'Whether to adjust containerd template for GHCR.io credentials'
-    required: false
   ghcr_package_api_user:
-    description: 'GitHub Container Registry API User'
+    description: 'ghcr.io user for whom the API token (`ghcr_package_api_token`) has been generated'
+    default: ''
     required: false
   ghcr_package_api_token:
-    description: 'GitHub Container Registry API Token'
+    description: 'ghcr.io API token'
+    default: ''
     required: false
 
 runs:
@@ -34,7 +36,7 @@ runs:
         lxd-channel: 5.19/stable
     - name: Adjust containerd template to add ghcr.io credentials
       shell: bash
-      if: ${{ inputs.add_ghcr_creds_to_containerd_template == 'true' }}
+      if: ${{ inputs.ghcr_package_api_user != '' && inputs.ghcr_package_api_token != '' }}
       run: |
         sudo mkdir -p /var/snap/microk8s/current/args
         echo "" | sudo tee -a /var/snap/microk8s/current/args/containerd-template.toml
