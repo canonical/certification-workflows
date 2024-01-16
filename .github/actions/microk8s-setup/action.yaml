@@ -50,7 +50,7 @@ runs:
     - name: Set up mirror for docker.io image registry
       shell: bash
       run: |
-        sudo mkdir -p /var/snap/microk8s/current/args/certs.d/docker.io
+        while [ ! -d /var/snap/microk8s/current/args/certs.d/docker.io ]; do sleep 1; done
         echo 'server = "https://github-runner-dockerhub-cache.canonical.com:5000"' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo '[host."https://github-runner-dockerhub-cache.canonical.com:5000"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
