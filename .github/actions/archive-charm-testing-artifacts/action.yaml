@@ -5,19 +5,19 @@ runs:
   using: 'composite'
   steps:
   - name: Archive the tested charm
-    uses: actions/upload-artifact@v3
+    uses: actions/upload-artifact@v4
     with:
       name: tested-charm-${{github.run_id}}
       path: .tox/**/*.charm
       retention-days: 5
   - name: Archive logs on failure
-    uses: actions/upload-artifact@v3
+    uses: actions/upload-artifact@v4
     with:
       name: charmcraft-logs
       path: ./**/*.log
   - name: Archive juju crashdump on failure
     if: failure()
-    uses: actions/upload-artifact@v3
+    uses: actions/upload-artifact@v4
     with:
       name: juju-crashdump
       path: ./**/juju-crashdump-*.tar.xz
