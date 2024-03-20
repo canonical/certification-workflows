@@ -1,0 +1,75 @@
+name: "Testflinger Submission"
+description: "Submits a  to the Testflinger job schema using YAML provision data"
+inputs:
+  job_queue:
+    description: "The queue to post the job to"
+    required: true
+  poll:
+    description: "Poll for the output (true by default)"
+    required: false
+  global_timeout:
+    description: "Maximum time (in seconds) a job is allowed to run."
+    required: false
+  output_timeout:
+    description: "Maximum time (in seconds) Testflinger should wait in the test phase to get output from the job."
+    required: false
+  allocation_timeout:
+    description: "Maximum time (in seconds) Testflinger should wait in the allocate phase for multi-device jobs to reach the allocated state."
+    required: false
+  provision_data:
+    description: "YAML string for the optional provision phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#provision for more info)"
+    required: false
+  firmware_update_data:
+    description: "YAML string for the optional firmware update phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#firmware-update for more info)"
+    required: false
+  test_data:
+    description: "YAML string for the optional test phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#test for more info)"
+    required: false
+  allocate_data:
+    description: "YAML string for the optional allocate phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#allocate for more info)"
+    required: false
+  reserve_data:
+    description: "YAML string for the optional reserve phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#reserve for more info)"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        sudo snap install yq testflinger-cli
+
+    - name: Test testflinger connection
+      shell: bash
+      run: |
+        nc -vz testflinger.canonical.com 443
+
+    - name: Build job definition
+      shell: bash
+      run: |
+        cat << EOF > job_definition.yaml
+        job_queue: ${{ inputs.job_queue }}
+        $(if [ -n "${{ inputs.global_timeout }}" ]; then echo "global_timeout: ${{ inputs.global_timeout }}"; fi)
+        $(if [ -n "${{ inputs.output_timeout }}" ]; then echo "output_timeout: ${{ inputs.output_timeout }}"; fi)
+        $(if [ -n "${{ inputs.allocation_timeout }}" ]; then echo "allocation_timeout: ${{ inputs.allocation_timeout }}"; fi)
+        $(if [ -n "${{ inputs.provision_data }}" ]; then echo "provision_data:"; echo "${{ inputs.provision_data }}" | yq eval -P - ; fi)
+        $(if [ -n "${{ inputs.firmware_update_data }}" ]; then echo "firmware_update_data:"; echo "${{ inputs.firmware_update_data }}" | yq eval -P - ; fi)
+        $(if [ -n "${{ inputs.test_data }}" ]; then echo "test_data:"; echo "${{ inputs.test_data }}" | yq eval -P - ; fi)
+        $(if [ -n "${{ inputs.allocate_data }}" ]; then echo "allocate_data:"; echo "${{ inputs.allocate_data }}" | yq eval -P - ; fi)
+        $(if [ -n "${{ inputs.reserve_data }}" ]; then echo "reserve_data:"; echo "${{ inputs.reserve_data }}" | yq eval -P - ; fi)
+        EOF
+        echo "Job definition created."
+
+    - name: Submit job to Testflinger and optionally poll
+      shell: bash
+      run: |
+        JOB_ID=$(testflinger submit -q job_definition.yaml)
+        echo "JOB_ID: $JOB_ID"
+
+        if [[ "${{ inputs.poll }}" == "true" ]]; then
+          testflinger poll $JOB_ID
+          TEST_STATUS=$(testflinger results $JOB_ID | jq -er .test_status)
+          echo "Test exit status: $TEST_STATUS"
+          exit $TEST_STATUS
+        fi
