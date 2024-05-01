@@ -1,12 +1,13 @@
-name: "Testflinger Submission"
-description: "Submits a  to the Testflinger job schema using YAML provision data"
+name: "Test-flinging"
+description: "Submits a job YAML to a Testflinger server"
 inputs:
-  job_queue:
-    description: "The queue to post the job to"
+  job:
+    description: "Job YAML string (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/job-schema/ for more info)"
     required: true
-  test_data:
-    description: "YAML string for the optional test phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#test for more info)"
+  server:
+    description: The Testflinger server to use
     required: false
+    default: 'testflinger.canonical.com'
 runs:
   using: "composite"
   steps:
@@ -18,19 +19,17 @@ runs:
     - name: Test testflinger connection
       shell: bash
       run: |
-        nc -vz testflinger.canonical.com 443
+        nc -vz ${{ inputs.server }} 443
 
     - name: Build job definition
       shell: bash
       run: |
-        cat << EOF > job_definition.yaml
-        job_queue: rpi4b1g-001
-        $(if [ -n "${{ inputs.test_data }}" ]; then echo "test_data:"; echo "${{ inputs.test_data }}" | yq eval -P - ; fi)
-        EOF
-        echo "Job definition created."
+        echo "${{ inputs.job }}" | yq eval -P - > job.yaml
+        # diagnostics
+        cat job.yaml
 
     - name: Submit job to Testflinger and optionally poll
       shell: bash
       run: |
-        JOB_ID=$(testflinger --server https://testflinger-staging.canonical.com submit -q job_definition.yaml)
-        echo "JOB_ID: $JOB_ID"
+        JOB_ID=$(testflinger --server ${{ inputs.server }} submit --quiet job.yaml)
+        echo "job id: $JOB_ID"
