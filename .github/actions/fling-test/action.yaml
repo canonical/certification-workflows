@@ -1,0 +1,36 @@
+name: "Testflinger Submission"
+description: "Submits a  to the Testflinger job schema using YAML provision data"
+inputs:
+  job_queue:
+    description: "The queue to post the job to"
+    required: true
+  test_data:
+    description: "YAML string for the optional test phase (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/test-phases/#test for more info)"
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Install prerequisites
+      shell: bash
+      run: |
+        sudo snap install yq testflinger-cli
+
+    - name: Test testflinger connection
+      shell: bash
+      run: |
+        nc -vz testflinger.canonical.com 443
+
+    - name: Build job definition
+      shell: bash
+      run: |
+        cat << EOF > job_definition.yaml
+        job_queue: rpi4b1g-001
+        $(if [ -n "${{ inputs.test_data }}" ]; then echo "test_data:"; echo "${{ inputs.test_data }}" | yq eval -P - ; fi)
+        EOF
+        echo "Job definition created."
+
+    - name: Submit job to Testflinger and optionally poll
+      shell: bash
+      run: |
+        JOB_ID=$(testflinger submit -q --server https://testflinger-staging.canonical.com job_definition.yaml)
+        echo "JOB_ID: $JOB_ID"
