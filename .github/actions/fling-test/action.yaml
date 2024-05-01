@@ -31,5 +31,5 @@ runs:
     - name: Submit job to Testflinger and optionally poll
       shell: bash
       run: |
-        JOB_ID=$(testflinger --server ${{ inputs.server }} submit --quiet job.yaml)
+        JOB_ID=$(testflinger --server https://${{ inputs.server }} submit --quiet job.yaml)
         echo "job id: $JOB_ID"
