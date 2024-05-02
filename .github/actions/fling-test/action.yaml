@@ -21,15 +21,13 @@ runs:
       run: |
         nc -vz ${{ inputs.server }} 443
 
-    - name: Build job definition
+    - name: Verify job
       shell: bash
       run: |
-        echo "${{ inputs.job }}" | yq eval -P - > job.yaml
+        echo -e "Job received:\n{{ inputs.job }}"
+        JOB_FILE=${{ github.workspace }}/job.yaml
+        echo "${{ inputs.job }}" > $JOB_FILE
+        # echo "${{ inputs.job }}" | yq eval -P - > job.yaml
         # diagnostics
-        cat job.yaml
-
-    - name: Submit job to Testflinger and optionally poll
-      shell: bash
-      run: |
-        JOB_ID=$(testflinger --server https://${{ inputs.server }} submit --quiet job.yaml)
-        echo "job id: $JOB_ID"
+        echo "Job file to be submitted"
+        cat $JOB_FILE
