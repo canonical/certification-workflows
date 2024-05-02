@@ -25,9 +25,9 @@ runs:
       shell: bash
       run: |
         cat ${{ inputs.job }}
-        #JOB_FILE=${{ github.workspace }}/job.yaml
-        #echo "${{ inputs.job }}" > $JOB_FILE
-        # echo "${{ inputs.job }}" | yq eval -P - > job.yaml
-        # diagnostics
-        #echo "Job file to be submitted"
-        #cat $JOB_FILE
+
+    - name: "Submit job"
+      shell: bash
+      run: |
+        JOB_ID=$(testflinger --server https://${{ inputs.server }} submit --quiet ${{ inputs.job }})
+        echo "job id: $JOB_ID"
