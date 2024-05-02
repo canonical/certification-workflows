@@ -24,7 +24,7 @@ runs:
     - name: "Display job"
       shell: bash
       run: |
-        echo ${{ inputs.job }}
+        cat ${{ inputs.job }}
         #JOB_FILE=${{ github.workspace }}/job.yaml
         #echo "${{ inputs.job }}" > $JOB_FILE
         # echo "${{ inputs.job }}" | yq eval -P - > job.yaml
