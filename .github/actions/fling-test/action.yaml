@@ -36,7 +36,7 @@ runs:
       run: |
         echo $JOB_ID
         # poll
-        testflinger --server https://${{ inputs.server }} poll $JOB_ID
+        PYTHONUNBUFFERED=1 testflinger --server https://${{ inputs.server }} poll $JOB_ID
         # retrieve results
         STATUS=$(testflinger --server https://${{ inputs.server }} results $JOB_ID | jq -er .test_status)
         echo "Test exit status: $STATUS"
