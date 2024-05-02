@@ -1,8 +1,8 @@
 name: Test-flinging
-description: Submit a job YAML to a Testflinger server
+description: Submit a job YAML file to a Testflinger server
 inputs:
   job:
-    description: "Job YAML string (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/job-schema/ for more info)"
+    description: "Path to a job file (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/job-schema/ for more info)"
     required: true
   server:
     description: The Testflinger server to use
@@ -13,20 +13,17 @@ runs:
   steps:
     - name: Install prerequisites
       shell: bash
-      run: |
-        sudo snap install testflinger-cli jq
+      run: sudo snap install testflinger-cli jq
 
     - name: Test connection to Testflinger server
       shell: bash
-      run: |
-        nc -vz ${{ inputs.server }} 443
+      run: nc -vz ${{ inputs.server }} 443
 
-    - name: "Display job"
+    - name: Display contents of job file (for verification)
       shell: bash
-      run: |
-        cat ${{ inputs.job }}
+      run: cat ${{ inputs.job }}
 
-    - name: "Submit job"
+    - name: Submit job to the Testflinger server
       id: submit
       shell: bash
       run: |
@@ -34,7 +31,7 @@ runs:
         echo "job id: $JOB_ID"
         echo "job_id=$JOB_ID" >> GITHUB_OUTPUT
 
-    - name: "Poll and exit with result status"
+    - name: Track the status of the job and mirror its exit status
       shell: bash
       run: |
         # poll
