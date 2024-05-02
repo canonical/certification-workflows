@@ -5,7 +5,11 @@ inputs:
     description: "Path to a job file (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/job-schema/ for more info)"
     required: true
   poll:
-    description: The Testflinger server to use
+    description: Specify if the submitted job should be tracked to completion
+    required: false
+    default: false
+  dry-run:
+    description: Specify if the job should really be submitted
     required: false
     default: false
   server:
@@ -28,6 +32,7 @@ runs:
       run: cat ${{ inputs.job }}
 
     - name: Submit job to the Testflinger server
+      if: inputs.dry-run != 'true'
       id: submit
       shell: bash
       run: |
@@ -36,7 +41,7 @@ runs:
         echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
 
     - name: Track the status of the job and mirror its exit status
-      if: inputs.poll == 'true'
+      if: inputs.poll == 'true' && inputs.dry-run != 'true'
       shell: bash
       run: |
         echo $JOB_ID
