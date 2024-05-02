@@ -4,6 +4,10 @@ inputs:
   job:
     description: "Path to a job file (see https://canonical-testflinger.readthedocs-hosted.com/en/latest/reference/job-schema/ for more info)"
     required: true
+  poll:
+    description: The Testflinger server to use
+    required: false
+    default: false
   server:
     description: The Testflinger server to use
     required: false
@@ -32,6 +36,7 @@ runs:
         echo "JOB_ID=$JOB_ID" >> $GITHUB_ENV
 
     - name: Track the status of the job and mirror its exit status
+      if: inputs.poll == 'true'
       shell: bash
       run: |
         echo $JOB_ID
