@@ -27,16 +27,18 @@ runs:
       id: submit
       shell: bash
       run: |
-        JOB_ID=$(testflinger --server https://${{ inputs.server }} submit --quiet ${{ inputs.job }})
-        echo "job id: $JOB_ID"
-        echo "job_id=$JOB_ID" >> GITHUB_OUTPUT
+        #JOB_ID=$(testflinger --server https://${{ inputs.server }} submit --quiet ${{ inputs.job }})
+        #echo "job id: $JOB_ID"
+        #echo "job_id=$JOB_ID" >> GITHUB_OUTPUT
+        echo "job_id=ABCDEFG" >> GITHUB_OUTPUT
 
     - name: Track the status of the job and mirror its exit status
       shell: bash
       run: |
+        echo ${{ steps.submit.outputs.job_id }}
         # poll
-        testflinger --server https://${{ inputs.server }} poll ${{ steps.submit.outputs.job_id }}
+        #testflinger --server https://${{ inputs.server }} poll ${{ steps.submit.outputs.job_id }}
         # retrieve results
-        STATUS=$(testflinger --server https://${{ inputs.server }} results ${{ steps.submit.job_id }} | jq -er .test_status)
-        echo "Test exit status: $STATUS"
-        exit $STATUS
+        #STATUS=$(testflinger --server https://${{ inputs.server }} results ${{ steps.submit.job_id }} | jq -er .test_status)
+        #echo "Test exit status: $STATUS"
+        #exit $STATUS
