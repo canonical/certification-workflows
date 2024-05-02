@@ -14,7 +14,7 @@ runs:
     - name: Install prerequisites
       shell: bash
       run: |
-        sudo snap install testflinger-cli
+        sudo snap install testflinger-cli jq
 
     - name: Test connection to Testflinger server
       shell: bash
@@ -27,7 +27,19 @@ runs:
         cat ${{ inputs.job }}
 
     - name: "Submit job"
+      id: submit
       shell: bash
       run: |
         JOB_ID=$(testflinger --server https://${{ inputs.server }} submit --quiet ${{ inputs.job }})
         echo "job id: $JOB_ID"
+        echo "job_id=$JOB_ID" >> GITHUB_OUTPUT
+
+    - name: "Poll and exit with result status"
+      shell: bash
+      run: |
+        # poll
+        testflinger --server https://${{ inputs.server }} poll ${{ steps.submit.job_id }}
+        # retrieve results
+        STATUS=$(testflinger --server https://${{ inputs.server }} results ${{ steps.submit.job_id }} | jq -er .test_status)
+        echo "Test exit status: $STATUS"
+        exit $STATUS
