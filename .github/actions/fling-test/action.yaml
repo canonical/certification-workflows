@@ -36,8 +36,8 @@ runs:
       run: |
         echo $JOB_ID
         # poll
-        testflinger --server https://${{ inputs.server }} poll ${{ steps.submit.outputs.job_id }}
+        testflinger --server https://${{ inputs.server }} poll $JOB_ID
         # retrieve results
-        STATUS=$(testflinger --server https://${{ inputs.server }} results ${{ steps.submit.job_id }} | jq -er .test_status)
+        STATUS=$(testflinger --server https://${{ inputs.server }} results $JOB_ID | jq -er .test_status)
         echo "Test exit status: $STATUS"
         exit $STATUS
