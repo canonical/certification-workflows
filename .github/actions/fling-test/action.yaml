@@ -44,7 +44,6 @@ runs:
       if: inputs.poll == 'true' && inputs.dry-run != 'true'
       shell: bash
       run: |
-        echo $JOB_ID
         # poll
         PYTHONUNBUFFERED=1 testflinger --server https://${{ inputs.server }} poll $JOB_ID
         # retrieve results
