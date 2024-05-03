@@ -1,0 +1,146 @@
+# This workflow build HTML and PDF artifacts from docs in canonical/certification-docs
+name: Build Certification Programme Documentation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      working-directory:
+        description: 'Working directory to run the workflow in'
+        required: true
+        type: string
+      generate-guides:
+        description: 'Whether to generate coverage guides or not. Optional. Default is true.'
+        required: false
+        default: 'true'
+        type: string
+      generate-pdf:
+        description: 'Whether to build PDF files or not. Optional. Default is true.'
+        required: false
+        default: 'true'
+        type: string
+
+jobs:
+  generate-guides:
+    if:  ${{ inputs.generate-guides == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: ${{ inputs.working-directory }}
+
+      - name: Check if run_generate_test_guide.sh exists
+        id: check-script-exists
+        run: |
+          test -f ${{ inputs.working-directory }}/scripts/run_generate_test_guide.sh \
+          || { echo "run_generate_test_guide.sh not found, skipping"; exit 0; }
+
+      - name: Add checkbox-dev/beta ppa
+        run: |
+          sudo add-apt-repository ppa:checkbox-dev/beta
+          sudo apt-get update
+      
+      - name: Install apt prerequisites
+        run: |
+          sudo apt-get install --no-install-recommends --assume-yes \
+            canonical-certification-client \
+            canonical-certification-server
+
+      - name: Generate coverage guides
+        run: |
+          cd ${{ inputs.working-directory }}/scripts/
+          alias checkbox-cli="checkbox.checkbox-cli"
+          bash ./run_generate_test_guide.sh
+        id: generate-guides
+
+      # save the generated guides for use in next job
+      - name: Save generated guides
+        id: save-guides
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-coverage-guides
+          path: ${{ inputs.working-directory }}/generated
+          retention-days: 5
+
+  build-docs:
+    needs: generate-guides
+    if: ${{ needs.generate-guides.result == 'skipped' || needs.generate-guides.result == 'success' }}
+    runs-on: ubuntu-latest
+  
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true  
+
+    env:
+      BUILDDIR_HTML: ${{ inputs.working-directory }}/_build/html
+      BUILDDIR_PDF: ${{ inputs.working-directory }}/_build/pdf
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: ${{ inputs.working-directory }}
+
+      - name: Check if Makefile exists
+        run: |
+          test -f ${{ inputs.working-directory }}/Makefile \
+          || { echo "Makefile not found, exiting."; exit 1; }
+
+      - name: Install apt prerequisites
+        run: |
+          sudo apt-get install --no-install-recommends --assume-yes \
+            python3-pip \
+            python3-venv \
+            python3-sphinx \
+            build-essential \
+            fonts-ubuntu
+
+      - name: Initialise submodules
+        run: |
+          cd ${{ inputs.working-directory }}
+          git submodule update --init .sphinx/_extension/canonical-sphinx-extensions
+
+      - name: Set up and activate Sphinx virtualenv
+        run: |
+          cd ${{ inputs.working-directory }}
+          make install
+
+      # restore the generated guides from previous job, if they exist
+      - name: Restore generated guides
+        if:  ${{ inputs.generate-guides == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-coverage-guides
+          path: ${{ inputs.working-directory }}/generated
+        continue-on-error: true
+
+      - name: Build PDF formatted documentation
+        if:  ${{ inputs.generate-pdf == 'true' }}
+        run: |
+          make clean-doc
+          make pdf
+
+      - name: Upload PDF formatted artifacts
+        if:  ${{ inputs.generate-pdf == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF
+          path:  ${{ env.BUILDDIR_PDF }}
+          retention-days: 5
+
+      - name: Build HTML formatted documentation
+        run: |
+          make html
+
+      - name: Upload HTML formatted artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: HTML
+          path: ${{ env.BUILDDIR_HTML }}
+          retention-days: 5
