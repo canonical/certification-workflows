@@ -5,16 +5,16 @@ description: |
   the action will also configure the cluster to be able to pull images from a private ghcr.io registry.
 inputs:
   ghcr_package_api_user:
-    description: 'ghcr.io user for whom the API token (`ghcr_package_api_token`) has been generated'
-    default: ''
+    description: "ghcr.io user for whom the API token (`ghcr_package_api_token`) has been generated"
+    default: ""
     required: false
   ghcr_package_api_token:
-    description: 'ghcr.io API token'
-    default: ''
+    description: "ghcr.io API token"
+    default: ""
     required: false
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Set up docker buildx with docker.io image registry mirror caching
       uses: docker/setup-buildx-action@v3
@@ -29,11 +29,11 @@ runs:
     - name: Setup operator environment
       uses: charmed-kubernetes/actions-operator@main
       with:
-        channel: 1.28-strict/stable
+        channel: 1.31-strict/stable
         provider: microk8s
-        juju-channel: 3.2/stable
-        charmcraft-channel: 2.x/stable
-        lxd-channel: 5.19/stable
+        juju-channel: 3/stable
+        charmcraft-channel: 3.x/stable
+        lxd-channel: 5.21/stable
     - name: Adjust containerd template to add ghcr.io credentials
       shell: bash
       if: ${{ inputs.ghcr_package_api_user != '' && inputs.ghcr_package_api_token != '' }}
@@ -54,4 +54,3 @@ runs:
         echo 'server = "https://github-runner-dockerhub-cache.canonical.com:5000"' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo '[host."https://github-runner-dockerhub-cache.canonical.com:5000"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
         echo 'capabilities = ["pull", "resolve"]' | sudo tee -a /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml
-        
